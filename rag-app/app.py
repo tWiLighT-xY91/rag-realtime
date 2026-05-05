@@ -10,9 +10,14 @@ if uploaded_file:
     with open("temp.pdf", "wb") as f:
         f.write(uploaded_file.read())
 
-    docs = load_and_split("temp.pdf")
-    vectorstore = create_vectorstore(docs)
+    if os.path.exists("./chroma_db"):
+        vectorstore = load_vectorstore()
+    
+    else:
+        docs = load_and_split("temp.pdf")
+        vectorstore = create_vectorstore(docs)
 
+    
     query = st.text_input("Ask a question:")
 
     if query:

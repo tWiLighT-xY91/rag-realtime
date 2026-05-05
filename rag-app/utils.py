@@ -1,8 +1,8 @@
-from langchain.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.chat_models import ChatOpenAI
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_community.chat_models import ChatOllama
 
 def load_and_split(pdf_path):
     loader = PyPDFLoader(pdf_path)
@@ -15,14 +15,30 @@ def load_and_split(pdf_path):
     return splitter.split_documents(documents)
 
 def create_vectorstore(docs):
-    embeddings = OpenAIEmbeddings()
-    return FAISS.from_documents(docs, embeddings)
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    
+    vectorstore = Chroma.from_documents(
+        docs,
+        embeddings,
+        persist_directory="./chroma_db"
+    )
+    
+    vectorstore.persist()
+    return vectorstore
+    
+def load_vectorstore():
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    
+    return Chroma(
+        persist_directory="./chroma_db",
+        embedding_function=embeddings
+    )
 
 def get_response(vectorstore, query):
     retriever = vectorstore.as_retriever()
-    docs = retriever.get_relevant_documents(query)
+    docs = retriever.invoke(query)
 
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOllama(model="llama3")
     context = "\n".join([doc.page_content for doc in docs])
 
     prompt = f"""
@@ -32,4 +48,5 @@ def get_response(vectorstore, query):
     Question: {query}
     """
 
-    return llm.predict(prompt)
+    response = llm.invoke(prompt)
+    return response.content
