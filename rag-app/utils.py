@@ -14,25 +14,19 @@ def load_and_split(pdf_path):
     )
     return splitter.split_documents(documents)
 
-def create_vectorstore(docs):
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    
-    vectorstore = Chroma.from_documents(
-        docs,
-        embeddings,
-        persist_directory="./chroma_db"
-    )
-    
-    vectorstore.persist()
-    return vectorstore
-    
-def load_vectorstore():
+def get_vectorstore():
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     
     return Chroma(
         persist_directory="./chroma_db",
         embedding_function=embeddings
     )
+
+def add_documents_to_db(docs):
+    vectorstore = get_vectorstore()
+    vectorstore.add_documents(docs)
+    vectorstore.persist()
+    return vectorstore
 
 def get_response(vectorstore, query):
     retriever = vectorstore.as_retriever()
