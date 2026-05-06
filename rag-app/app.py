@@ -4,7 +4,7 @@ from utils import load_and_split, get_vectorstore, get_response, add_documents_t
 
 st.title("📚 AI Study Assistant")
 
-uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
+uploaded_files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
 
 vectorstore = None
 
@@ -13,12 +13,13 @@ vectorstore = None
 if os.path.exists("./chroma_db"):
     vectorstore = get_vectorstore()
 
-if uploaded_file:
-    with open("temp.pdf", "wb") as f:
-        f.write(uploaded_file.read())
+if uploaded_files:
+    for file in uploaded_files:
+        with open(file.name, "wb") as f:
+            f.write(file.read())
 
-    docs = load_and_split("temp.pdf")
-    vectorstore = add_documents_to_db(docs)
+        docs = load_and_split(file.name)
+        vectorstore = add_documents_to_db(docs)
 
 # Step 2: ALWAYS show input (failed in the first attempt, cause I was too dumb to notice)
 query = st.text_input("Ask a question:")

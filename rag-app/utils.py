@@ -36,11 +36,16 @@ def get_response(vectorstore, query):
     context = "\n".join([doc.page_content for doc in docs])
 
     prompt = f"""
-    Answer the question based only on the context below:
-    {context}
+     You MUST answer ONLY from the provided context.
 
-    Question: {query}
-    """
+     If the answer is not present in the context, say:
+     "I could not find this information in the provided documents."
+
+     Context:
+     {context}
+
+     Question: {query}
+     """
 
     response = llm.invoke(prompt)
     return response.content
