@@ -28,24 +28,38 @@ def add_documents_to_db(docs):
     vectorstore.persist()
     return vectorstore
 
-def get_response(vectorstore, query):
+def get_response(vectorstore, query, chat_history):
     retriever = vectorstore.as_retriever()
     docs = retriever.invoke(query)
 
     llm = ChatOllama(model="llama3")
     context = "\n".join([doc.page_content for doc in docs])
+    
+    conversation_context = ""
+
+    for chat in chat_history:
+       conversation_context += f"""
+       User: {chat['user']}
+       Assistant: {chat['assistant']}
+       """
 
     prompt = f"""
-     You MUST answer ONLY from the provided context.
+    You MUST answer using:
+    1. The provided document context
+    2. The conversation history for continuity
 
-     If the answer is not present in the context, say:
-     "I could not find this information in the provided documents."
+    If the answer is not present in the documents, say:
+    "I could not find this information in the provided documents."
+    
+    Conversation History:
+    {conversation_context}
 
-     Context:
-     {context}
+    Document Context:
+    {context}
 
-     Question: {query}
-     """
+    Question:
+    {query}
+    """
 
     response = llm.invoke(prompt)
     return response.content

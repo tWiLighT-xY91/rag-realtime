@@ -4,6 +4,10 @@ from utils import load_and_split, get_vectorstore, get_response, add_documents_t
 
 st.title("📚 AI Study Assistant")
 
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+    
+
 uploaded_files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
 
 vectorstore = None
@@ -29,6 +33,13 @@ if query:
     if vectorstore is None:
         st.warning("Please upload a PDF first.")
     else:
-        answer = get_response(vectorstore, query)
+        answer = get_response(
+                vectorstore,
+                query,
+                st.session_state.chat_history
+               )
         st.write("### Answer:")
         st.write(answer)
+        st.session_state.chat_history.append(
+         {"user": query, "assistant": answer}
+          )
