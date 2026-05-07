@@ -33,7 +33,7 @@ if query:
     if vectorstore is None:
         st.warning("Please upload a PDF first.")
     else:
-        answer = get_response(
+        answer, sources = get_response(
                 vectorstore,
                 query,
                 st.session_state.chat_history
@@ -43,3 +43,6 @@ if query:
         st.session_state.chat_history.append(
          {"user": query, "assistant": answer}
           )
+        st.write("### Sources:")
+        for source in sources:
+            st.write(f"- {source}")

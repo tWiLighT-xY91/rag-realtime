@@ -31,7 +31,19 @@ def add_documents_to_db(docs):
 def get_response(vectorstore, query, chat_history):
     retriever = vectorstore.as_retriever()
     docs = retriever.invoke(query)
+    
+    sources = []
 
+    for doc in docs:
+        source = doc.metadata.get("source", "Unknown")
+        page = doc.metadata.get("page", "N/A")
+
+        source_info = f"{source} (Page {page + 1})"
+
+        if source_info not in sources:
+            sources.append(source_info)
+        
+           
     llm = ChatOllama(model="llama3")
     context = "\n".join([doc.page_content for doc in docs])
     
@@ -62,4 +74,4 @@ def get_response(vectorstore, query, chat_history):
     """
 
     response = llm.invoke(prompt)
-    return response.content
+    return response.content, sources
