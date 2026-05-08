@@ -3,6 +3,12 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.chat_models import ChatOllama
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
+UPLOADS_PATH = os.path.join(BASE_DIR, "uploads")
 
 def load_and_split(pdf_path):
     loader = PyPDFLoader(pdf_path)
@@ -18,7 +24,7 @@ def get_vectorstore():
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     
     return Chroma(
-        persist_directory="./chroma_db",
+        persist_directory=CHROMA_PATH,
         embedding_function=embeddings
     )
 

@@ -1,0 +1,49 @@
+from fastapi import FastAPI, UploadFile, File
+from rag1.utils import (
+    load_and_split,
+    add_documents_to_db,
+    get_vectorstore,
+    get_response
+)
+
+app = FastAPI()
+
+chat_history = []
+
+@app.get("/")
+def root():
+    return {"message": "Backend is running"}
+
+@app.post("/upload")
+async def upload_pdf(file: UploadFile = File(...)):
+    
+    file_path = f"uploads/{file.filename}"
+
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    docs = load_and_split(file_path)
+    add_documents_to_db(docs)
+
+    return {"message": f"{file.filename} uploaded successfully"}
+
+@app.post("/chat")
+def chat(query: str):
+
+    vectorstore = get_vectorstore()
+
+    answer, sources = get_response(
+        vectorstore,
+        query,
+        chat_history
+    )
+
+    chat_history.append({
+        "user": query,
+        "assistant": answer
+    })
+
+    return {
+        "answer": answer,
+        "sources": sources
+    }
