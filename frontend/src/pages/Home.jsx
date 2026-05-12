@@ -4,7 +4,7 @@ import { sendMessage, uploadPDF } from "../api/api";
 export default function Home() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
@@ -16,20 +16,22 @@ export default function Home() {
   }, [messages, loading]);
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     try {
-      setUploadStatus("Uploading PDF...");
+      setUploadStatus("Uploading PDFs...");
 
-      const data = await uploadPDF(selectedFile);
+      for (const file of selectedFiles) {
+        await uploadPDF(file);
+      }
 
-      setUploadStatus(data.message);
+      setUploadStatus("All PDFs uploaded successfully.");
     } catch (error) {
       console.error(error);
       setUploadStatus("Upload failed.");
     }
   };
-
+  
   const handleSend = async () => {
     if (!query.trim()) return;
 
@@ -118,8 +120,8 @@ export default function Home() {
           <input
             type="file"
             accept=".pdf"
-            onChange={(e) => setSelectedFile(e.target.files[0])}
-            className="text-sm"
+            multiple
+            onChange={(e) => setSelectedFiles(Array.from(e.target.files))}
           />
 
           <button
