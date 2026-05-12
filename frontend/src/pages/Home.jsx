@@ -6,6 +6,7 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleUpload = async () => {
     if (!selectedFile) return;
@@ -18,7 +19,6 @@ export default function Home() {
       setUploadStatus(data.message);
     } catch (error) {
       console.error(error);
-
       setUploadStatus("Upload failed.");
     }
   };
@@ -33,9 +33,11 @@ export default function Home() {
 
     setMessages((prev) => [...prev, userMessage]);
 
+    setQuery("");
+    setLoading(true);
+
     try {
       const data = await sendMessage(query);
-      console.log(data);
 
       const aiMessage = {
         role: "assistant",
@@ -44,6 +46,7 @@ export default function Home() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
     } catch (error) {
       console.error(error);
 
@@ -54,26 +57,31 @@ export default function Home() {
           content: "Backend connection failed.",
         },
       ]);
-    }
 
-    setQuery("");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+
       <header className="border-b border-zinc-800 p-4">
-        <h1 className="text-2xl font-bold">AI Study Assistant 🗿</h1>
+        <h1 className="text-2xl font-bold">
+          AI Study Assistant 🗿
+        </h1>
       </header>
 
-      <main className="flex-1 p-6 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto space-y-4">
+
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`p-4 rounded-xl ${
+              className={`p-4 rounded-xl max-w-xl ${
                 msg.role === "user"
-                  ? "bg-zinc-800 ml-auto max-w-xl"
-                  : "bg-zinc-900 border border-zinc-700 max-w-xl"
+                  ? "bg-zinc-800 ml-auto"
+                  : "bg-zinc-900 border border-zinc-700"
               }`}
             >
               <p>{msg.content}</p>
@@ -82,18 +90,35 @@ export default function Home() {
                 <div className="mt-3 text-sm text-zinc-400">
                   <p className="font-semibold mb-1">Sources:</p>
 
-                  {msg.sources.map((source, idx) => (
-                    <p key={idx}>• {source}</p>
-                  ))}
+                  {msg.sources.map((source, idx) => {
+                    const cleanedSource = source
+                      .replace("uploads/", "")
+                      .replace("temp.pdf", "Uploaded PDF")
+                      .replace(/\(Page/g, " — Page");
+
+                    return (
+                      <p key={idx}>
+                        • {cleanedSource}
+                      </p>
+                    );
+                  })}
                 </div>
               )}
             </div>
           ))}
+
+          {loading && (
+            <div className="bg-zinc-900 border border-zinc-700 max-w-xl p-4 rounded-xl animate-pulse">
+              Thinking...
+            </div>
+          )}
+
         </div>
       </main>
 
-      <div className="p-4 border-t border-zinc-800 bg-zinc-950">
+      <div className="border-t border-zinc-800 p-4 bg-zinc-950">
         <div className="max-w-3xl mx-auto flex gap-2 items-center">
+
           <input
             type="file"
             accept=".pdf"
@@ -103,10 +128,11 @@ export default function Home() {
 
           <button
             onClick={handleUpload}
-            className="bg-red-600 px-4 py-2 rounded-lg border-2 border-white"
+            className="bg-red-600 px-4 py-2 rounded-lg border border-white hover:bg-red-500 transition"
           >
             Upload PDF
           </button>
+
         </div>
 
         {uploadStatus && (
@@ -118,22 +144,26 @@ export default function Home() {
 
       <div className="border-t border-zinc-800 p-4">
         <div className="max-w-3xl mx-auto flex gap-2">
+
           <input
             type="text"
             placeholder="Ask something..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-3 outline-none"
+            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-3 outline-none focus:border-white"
           />
 
           <button
             onClick={handleSend}
-            className="bg-white text-black px-6 rounded-lg font-semibold hover:bg-zinc-300"
+            disabled={loading}
+            className="bg-white text-black px-6 rounded-lg font-semibold hover:bg-zinc-300 transition disabled:opacity-50"
           >
             Send
           </button>
+
         </div>
       </div>
+
     </div>
   );
 }
