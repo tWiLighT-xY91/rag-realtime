@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { sendMessage, uploadPDF } from "../api/api";
 
 export default function Home() {
@@ -7,6 +7,13 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const handleUpload = async () => {
     if (!selectedFile) return;
@@ -38,6 +45,7 @@ export default function Home() {
 
     try {
       const data = await sendMessage(query);
+      console.log(data);
 
       const aiMessage = {
         role: "assistant",
@@ -46,7 +54,6 @@ export default function Home() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-
     } catch (error) {
       console.error(error);
 
@@ -57,7 +64,6 @@ export default function Home() {
           content: "Backend connection failed.",
         },
       ]);
-
     } finally {
       setLoading(false);
     }
@@ -65,16 +71,12 @@ export default function Home() {
 
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
-
       <header className="border-b border-zinc-800 p-4">
-        <h1 className="text-2xl font-bold">
-          AI Study Assistant 🗿
-        </h1>
+        <h1 className="text-2xl font-bold">AI Study Assistant 🗿</h1>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6">
+      <main ref={scrollRef} className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl mx-auto space-y-4">
-
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -96,11 +98,7 @@ export default function Home() {
                       .replace("temp.pdf", "Uploaded PDF")
                       .replace(/\(Page/g, " — Page");
 
-                    return (
-                      <p key={idx}>
-                        • {cleanedSource}
-                      </p>
-                    );
+                    return <p key={idx}>• {cleanedSource}</p>;
                   })}
                 </div>
               )}
@@ -112,13 +110,11 @@ export default function Home() {
               Thinking...
             </div>
           )}
-
         </div>
       </main>
 
       <div className="border-t border-zinc-800 p-4 bg-zinc-950">
         <div className="max-w-3xl mx-auto flex gap-2 items-center">
-
           <input
             type="file"
             accept=".pdf"
@@ -132,7 +128,6 @@ export default function Home() {
           >
             Upload PDF
           </button>
-
         </div>
 
         {uploadStatus && (
@@ -144,7 +139,6 @@ export default function Home() {
 
       <div className="border-t border-zinc-800 p-4">
         <div className="max-w-3xl mx-auto flex gap-2">
-
           <input
             type="text"
             placeholder="Ask something..."
@@ -160,10 +154,8 @@ export default function Home() {
           >
             Send
           </button>
-
         </div>
       </div>
-
     </div>
   );
 }
