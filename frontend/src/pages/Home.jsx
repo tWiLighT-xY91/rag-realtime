@@ -31,7 +31,7 @@ export default function Home() {
       setUploadStatus("Upload failed.");
     }
   };
-  
+
   const handleSend = async () => {
     if (!query.trim()) return;
 
@@ -115,22 +115,53 @@ export default function Home() {
         </div>
       </main>
 
-      <div className="border-t border-zinc-800 p-4 bg-zinc-950">
+      <div className="p-4 border-t border-zinc-800 bg-zinc-950">
         <div className="max-w-3xl mx-auto flex gap-2 items-center">
           <input
             type="file"
             accept=".pdf"
             multiple
-            onChange={(e) => setSelectedFiles(Array.from(e.target.files))}
+            id="pdfUpload"
+            className="hidden"
+            onChange={(e) =>
+              setSelectedFiles((prev) => [
+                ...prev,
+                ...Array.from(e.target.files),
+              ])
+            }
           />
+
+          <label
+            htmlFor="pdfUpload"
+            className="cursor-pointer bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg border border-zinc-600 transition"
+          >
+            Choose PDFs
+          </label>
+
+          <label
+            htmlFor="pdfUpload"
+            className="cursor-pointer bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold transition"
+          >
+            +
+          </label>
 
           <button
             onClick={handleUpload}
             className="bg-red-600 px-4 py-2 rounded-lg border border-white hover:bg-red-500 transition"
           >
-            Upload PDF
+            Upload
           </button>
         </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="max-w-3xl mx-auto mt-3 text-sm text-zinc-400">
+            <p className="mb-1 font-semibold">Selected PDFs:</p>
+
+            {selectedFiles.map((file, index) => (
+              <p key={index}>• {file.name}</p>
+            ))}
+          </div>
+        )}
 
         {uploadStatus && (
           <p className="max-w-3xl mx-auto mt-2 text-sm text-zinc-400">
@@ -146,7 +177,12 @@ export default function Home() {
             placeholder="Ask something..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-3 outline-none focus:border-white"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSend();
+              }
+            }}
+            className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-3 outline-none"
           />
 
           <button
