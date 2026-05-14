@@ -1,3 +1,5 @@
+from database import engine
+from models import Base
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from rag1.utils import (
@@ -8,7 +10,7 @@ from rag1.utils import (
 )
 
 app = FastAPI()
-
+Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5173"],
