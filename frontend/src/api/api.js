@@ -1,26 +1,42 @@
-import axios from "axios"
+import axios from "axios";
 
 const API = axios.create({
   baseURL: "http://127.0.0.1:8000",
-})
+});
 
 export const uploadPDF = async (file) => {
-  const formData = new FormData()
-  formData.append("file", file)
+  const formData = new FormData();
+  formData.append("file", file);
 
   const response = await API.post("/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
-  })
+  });
 
-  return response.data
-}
+  return response.data;
+};
 
-export const sendMessage = async (query) => {
+export const sendMessage = async (query, conversationId) => {
   const response = await API.post(
-    `/chat?query=${encodeURIComponent(query)}`
-  )
+    `/chat?query=${encodeURIComponent(query)}&conversation_id=${conversationId}`,
+  );
 
-  return response.data
-}
+  return response.data;
+};
+
+export const createConversation = async () => {
+  const response = await API.post("/conversations");
+  return response.data;
+};
+
+export const getConversations = async () => {
+  const response = await API.get("/conversations");
+  return response.data;
+};
+
+export const getMessages = async (conversationId) => {
+  const response = await API.get(`/conversations/${conversationId}`);
+
+  return response.data;
+};
