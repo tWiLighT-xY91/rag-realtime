@@ -1,11 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { sendMessage, uploadPDF } from "../api/api";
+import {
+  sendMessage,
+  uploadPDF,
+  createConversation,
+  getConversations,
+  getMessages,
+} from "../api/api";
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [activeConversation, setActiveConversation] = useState(null);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -16,15 +22,23 @@ export default function Home() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop =
-        scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  const handleNewChat = () => {
-    setMessages([]);
-    setActiveChatId(null);
-  };
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const data = await getConversations();
+
+        setConversations(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchConversations();
+  }, []);
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0) return;
@@ -37,15 +51,45 @@ export default function Home() {
       }
 
       setUploadStatus("All PDFs uploaded successfully.");
-
     } catch (error) {
       console.error(error);
       setUploadStatus("Upload failed.");
     }
   };
 
+  const handleNewChat = async () => {
+    try {
+      const newChat = await createConversation();
+
+      setConversations((prev) => [...prev, newChat]);
+
+      setActiveConversation(newChat.id);
+
+      setMessages([]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSelectChat = async (conversationId) => {
+    try {
+      setActiveConversation(conversationId);
+
+      const data = await getMessages(conversationId);
+
+      setMessages(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSend = async () => {
     if (!query.trim()) return;
+
+    if (!activeConversation) {
+      alert("Create a new chat first.");
+      return;
+    }
 
     const userMessage = {
       role: "user",
@@ -54,11 +98,13 @@ export default function Home() {
 
     setMessages((prev) => [...prev, userMessage]);
 
+    const currentQuery = query;
     setQuery("");
+
     setLoading(true);
 
     try {
-      const data = await sendMessage(query);
+      const data = await sendMessage(currentQuery, activeConversation);
 
       const aiMessage = {
         role: "assistant",
@@ -67,7 +113,7 @@ export default function Home() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-
+      await fetchConversations();
     } catch (error) {
       console.error(error);
 
@@ -78,7 +124,7 @@ export default function Home() {
           content: "Backend connection failed.",
         },
       ]);
-
+      
     } finally {
       setLoading(false);
     }
@@ -86,10 +132,8 @@ export default function Home() {
 
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
-
       {/* SIDEBAR */}
       <aside className="w-64 border-r border-zinc-800 bg-zinc-950 flex flex-col">
-
         <div className="p-4 border-b border-zinc-800">
           <button
             onClick={handleNewChat}
@@ -101,40 +145,35 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
           {conversations.length === 0 ? (
-            <p className="text-zinc-500 text-sm p-2">
-              No chats yet
-            </p>
+            <p className="text-zinc-500 text-sm p-2">No chats yet</p>
           ) : (
             conversations.map((chat) => (
               <button
                 key={chat.id}
-                className="w-full text-left bg-zinc-900 hover:bg-zinc-800 p-3 rounded-lg transition"
+                onClick={() => handleSelectChat(chat.id)}
+                className={`w-full text-left p-3 rounded-lg transition ${
+                  activeConversation === chat.id
+                    ? "bg-zinc-800 border border-zinc-600"
+                    : "bg-zinc-900 hover:bg-zinc-800"
+                }`}
               >
                 {chat.title}
               </button>
             ))
           )}
         </div>
-
       </aside>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
         {/* HEADER */}
         <header className="border-b border-zinc-800 p-4">
-          <h1 className="text-2xl font-bold">
-            Mi9A3 🗿
-          </h1>
+          <h1 className="text-2xl font-bold">Mi9A3 🗿</h1>
         </header>
 
         {/* CHAT AREA */}
-        <main
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-6"
-        >
+        <main ref={scrollRef} className="flex-1 overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto space-y-4">
-
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -148,23 +187,15 @@ export default function Home() {
 
                 {msg.sources && (
                   <div className="mt-3 text-sm text-zinc-400">
-
-                    <p className="font-semibold mb-1">
-                      Sources:
-                    </p>
+                    <p className="font-semibold mb-1">Sources:</p>
 
                     {msg.sources.map((source, idx) => {
-
                       const cleanedSource = source
                         .replace("uploads/", "")
                         .replace("temp.pdf", "Uploaded PDF")
                         .replace(/\(Page/g, " — Page");
 
-                      return (
-                        <p key={idx}>
-                          • {cleanedSource}
-                        </p>
-                      );
+                      return <p key={idx}>• {cleanedSource}</p>;
                     })}
                   </div>
                 )}
@@ -176,15 +207,12 @@ export default function Home() {
                 Thinking...
               </div>
             )}
-
           </div>
         </main>
 
         {/* UPLOAD SECTION */}
         <div className="p-4 border-t border-zinc-800 bg-zinc-950">
-
           <div className="max-w-3xl mx-auto flex gap-2 items-center flex-wrap">
-
             <input
               type="file"
               accept=".pdf"
@@ -219,22 +247,15 @@ export default function Home() {
             >
               Upload
             </button>
-
           </div>
 
           {selectedFiles.length > 0 && (
             <div className="max-w-3xl mx-auto mt-3 text-sm text-zinc-400">
-
-              <p className="mb-1 font-semibold">
-                Selected PDFs:
-              </p>
+              <p className="mb-1 font-semibold">Selected PDFs:</p>
 
               {selectedFiles.map((file, index) => (
-                <p key={index}>
-                  • {file.name}
-                </p>
+                <p key={index}>• {file.name}</p>
               ))}
-
             </div>
           )}
 
@@ -243,14 +264,11 @@ export default function Home() {
               {uploadStatus}
             </p>
           )}
-
         </div>
 
         {/* INPUT SECTION */}
         <div className="border-t border-zinc-800 p-4">
-
           <div className="max-w-3xl mx-auto flex gap-2">
-
             <input
               type="text"
               placeholder="Ask something..."
@@ -271,11 +289,8 @@ export default function Home() {
             >
               Send
             </button>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );
