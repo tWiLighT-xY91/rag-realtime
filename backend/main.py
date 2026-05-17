@@ -23,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-chat_history = []
+conversation_memory = {}
 
 
 @app.get("/")
@@ -77,8 +77,12 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
 
 @app.post("/chat")
 def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
-
     vectorstore = get_vectorstore()
+
+    if conversation_id not in conversation_memory:
+        conversation_memory[conversation_id] = []
+
+    chat_history = conversation_memory[conversation_id]
 
     answer, sources = get_response(vectorstore, query, chat_history)
 
@@ -93,7 +97,7 @@ def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
         db.query(Conversation).filter(Conversation.id == conversation_id).first()
     )
 
-    if conversation.title == "New Chat":
+    if conversation is not None and conversation.title == "New Chat":
         conversation.title = query[:40]
         db.commit()
 

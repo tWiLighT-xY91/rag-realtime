@@ -27,16 +27,6 @@ export default function Home() {
   }, [messages, loading]);
 
   useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const data = await getConversations();
-
-        setConversations(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
     fetchConversations();
   }, []);
 
@@ -54,6 +44,16 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       setUploadStatus("Upload failed.");
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const data = await getConversations();
+
+      setConversations(data);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -91,16 +91,16 @@ export default function Home() {
       return;
     }
 
+    const currentQuery = query;
+
     const userMessage = {
       role: "user",
-      content: query,
+      content: currentQuery,
     };
 
     setMessages((prev) => [...prev, userMessage]);
 
-    const currentQuery = query;
     setQuery("");
-
     setLoading(true);
 
     try {
@@ -113,7 +113,13 @@ export default function Home() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-      await fetchConversations();
+
+      // Refresh sidebar
+      try {
+        await fetchConversations();
+      } catch (err) {
+        console.error("Conversation refresh failed:", err);
+      }
     } catch (error) {
       console.error(error);
 
@@ -124,12 +130,10 @@ export default function Home() {
           content: "Backend connection failed.",
         },
       ]);
-      
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
       {/* SIDEBAR */}
