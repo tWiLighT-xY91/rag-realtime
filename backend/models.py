@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 from database import Base
+from datetime import datetime
 
 
 class Conversation(Base):
@@ -18,16 +19,12 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    conversation_id = Column(
-        Integer,
-        ForeignKey("conversations.id")
-    )
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
 
     role = Column(String, nullable=False)
 
     content = Column(Text, nullable=False)
 
-    conversation = relationship(
-        "Conversation",
-        back_populates="messages"
-    )
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    conversation = relationship("Conversation", back_populates="messages")

@@ -245,6 +245,14 @@ export default function Home() {
                 }`}
               >
                 <p>{msg.content}</p>
+                <p className="text-xs text-zinc-500 mt-2 text-right">
+                  {msg.timestamp
+                    ? new Date(msg.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </p>
 
                 {msg.sources && (
                   <div className="mt-3 text-sm text-zinc-400">
