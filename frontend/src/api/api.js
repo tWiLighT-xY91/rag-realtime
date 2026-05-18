@@ -4,15 +4,15 @@ const API = axios.create({
   baseURL: "http://127.0.0.1:8000",
 });
 
-export const uploadPDF = async (file) => {
+export const uploadPDF = async (file, conversationId) => {
   const formData = new FormData();
+
   formData.append("file", file);
 
-  const response = await API.post("/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await API.post(
+    `/upload?conversation_id=${conversationId}`,
+    formData,
+  );
 
   return response.data;
 };

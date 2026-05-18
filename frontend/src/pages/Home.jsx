@@ -31,16 +31,32 @@ export default function Home() {
   }, []);
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) return;
+    if (!selectedFiles.length) return;
+
+    let conversationId = activeConversation;
+
+    // auto create chat if none exists
+    if (!conversationId) {
+      const newChat = await createConversation();
+
+      conversationId = newChat.id;
+
+      setActiveConversation(conversationId);
+
+      await fetchConversations();
+    }
 
     try {
       setUploadStatus("Uploading PDFs...");
 
+      // upload files one by one
       for (const file of selectedFiles) {
-        await uploadPDF(file);
+        await uploadPDF(file, conversationId);
       }
 
       setUploadStatus("All PDFs uploaded successfully.");
+
+      setSelectedFiles([]);
     } catch (error) {
       console.error(error);
       setUploadStatus("Upload failed.");
@@ -75,6 +91,10 @@ export default function Home() {
     try {
       setActiveConversation(conversationId);
 
+      // reset upload state
+      setSelectedFiles([]);
+      setUploadStatus("");
+
       const data = await getMessages(conversationId);
 
       setMessages(data);
@@ -86,9 +106,16 @@ export default function Home() {
   const handleSend = async () => {
     if (!query.trim()) return;
 
-    if (!activeConversation) {
-      alert("Create a new chat first.");
-      return;
+    let conversationId = activeConversation;
+
+    // Auto-create chat
+    if (!conversationId) {
+      const newChat = await createConversation();
+
+      setConversations((prev) => [...prev, newChat]);
+      setActiveConversation(newChat.id);
+
+      conversationId = newChat.id;
     }
 
     const currentQuery = query;
@@ -104,7 +131,7 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const data = await sendMessage(currentQuery, activeConversation);
+      const data = await sendMessage(currentQuery, conversationId);
 
       const aiMessage = {
         role: "assistant",
@@ -114,12 +141,7 @@ export default function Home() {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Refresh sidebar
-      try {
-        await fetchConversations();
-      } catch (err) {
-        console.error("Conversation refresh failed:", err);
-      }
+      await fetchConversations();
     } catch (error) {
       console.error(error);
 

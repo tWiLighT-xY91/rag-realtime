@@ -17,7 +17,10 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +35,7 @@ def root():
 
 
 @app.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(conversation_id: int, file: UploadFile = File(...)):
 
     file_path = f"uploads/{file.filename}"
 
@@ -40,6 +43,11 @@ async def upload_pdf(file: UploadFile = File(...)):
         f.write(await file.read())
 
     docs = load_and_split(file_path)
+
+    # attach metadata to every chunk
+    for doc in docs:
+        doc.metadata["conversation_id"] = conversation_id
+
     add_documents_to_db(docs)
 
     return {"message": f"{file.filename} uploaded successfully"}
@@ -77,14 +85,19 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
 
 @app.post("/chat")
 def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
+
     vectorstore = get_vectorstore()
+
+    retriever = vectorstore.as_retriever(
+        search_kwargs={"filter": {"conversation_id": conversation_id}}
+    )
 
     if conversation_id not in conversation_memory:
         conversation_memory[conversation_id] = []
 
     chat_history = conversation_memory[conversation_id]
 
-    answer, sources = get_response(vectorstore, query, chat_history)
+    answer, sources = get_response(retriever, query, chat_history)
 
     chat_history.append({"user": query, "assistant": answer})
 
@@ -92,14 +105,6 @@ def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
 
     db.add(user_message)
     db.commit()
-
-    conversation = (
-        db.query(Conversation).filter(Conversation.id == conversation_id).first()
-    )
-
-    if conversation is not None and conversation.title == "New Chat":
-        conversation.title = query[:40]
-        db.commit()
 
     ai_message = Message(
         conversation_id=conversation_id, role="assistant", content=answer

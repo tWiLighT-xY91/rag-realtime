@@ -34,10 +34,10 @@ def add_documents_to_db(docs):
     vectorstore.persist()
     return vectorstore
 
-def get_response(vectorstore, query, chat_history):
-    retriever = vectorstore.as_retriever()
+def get_response(retriever, query, chat_history):
+
     docs = retriever.invoke(query)
-    
+
     sources = []
 
     for doc in docs:
@@ -48,18 +48,20 @@ def get_response(vectorstore, query, chat_history):
 
         if source_info not in sources:
             sources.append(source_info)
-        
-           
+
     llm = ChatOllama(model="llama3")
-    context = "\n".join([doc.page_content for doc in docs])
-    
+
+    context = "\n".join([
+        doc.page_content for doc in docs
+    ])
+
     conversation_context = ""
 
     for chat in chat_history:
-       conversation_context += f"""
-       User: {chat['user']}
-       Assistant: {chat['assistant']}
-       """
+        conversation_context += f"""
+        User: {chat['user']}
+        Assistant: {chat['assistant']}
+        """
 
     prompt = f"""
     You MUST answer using:
@@ -68,7 +70,7 @@ def get_response(vectorstore, query, chat_history):
 
     If the answer is not present in the documents, say:
     "I could not find this information in the provided documents."
-    
+
     Conversation History:
     {conversation_context}
 
@@ -80,4 +82,5 @@ def get_response(vectorstore, query, chat_history):
     """
 
     response = llm.invoke(prompt)
+
     return response.content, sources
