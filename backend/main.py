@@ -105,6 +105,13 @@ def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
 
     db.add(user_message)
     db.commit()
+    
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if (conversation and conversation.title == "New Chat"):
+        conversation.title = query[:20]  # set title to first 20 chars of first query
+        db.commit()
+
+
 
     ai_message = Message(
         conversation_id=conversation_id, role="assistant", content=answer
@@ -114,3 +121,21 @@ def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"answer": answer, "sources": sources}
+
+
+@app.delete("/conversations/{conversation_id}")
+def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
+
+    if not conversation:
+        return {"error": "Conversation not found"}
+
+    # delete messages first
+    db.query(Message).filter(Message.conversation_id == conversation_id).delete()
+
+    db.delete(conversation)
+    db.commit()
+
+    return {"message": "Conversation deleted successfully"}

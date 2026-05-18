@@ -5,6 +5,7 @@ import {
   createConversation,
   getConversations,
   getMessages,
+  deleteConversation,
 } from "../api/api";
 
 export default function Home() {
@@ -156,6 +157,27 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  const handleDeleteChat = async (conversationId) => {
+    try {
+      await deleteConversation(conversationId);
+
+      setConversations((prev) =>
+        prev.filter((chat) => chat.id !== conversationId),
+      );
+
+      // reset if active chat deleted
+      if (activeConversation === conversationId) {
+        setActiveConversation(null);
+        setMessages([]);
+        setSelectedFiles([]);
+        setUploadStatus("");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
       {/* SIDEBAR */}
@@ -174,17 +196,30 @@ export default function Home() {
             <p className="text-zinc-500 text-sm p-2">No chats yet</p>
           ) : (
             conversations.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => handleSelectChat(chat.id)}
-                className={`w-full text-left p-3 rounded-lg transition ${
-                  activeConversation === chat.id
-                    ? "bg-zinc-800 border border-zinc-600"
-                    : "bg-zinc-900 hover:bg-zinc-800"
-                }`}
-              >
-                {chat.title}
-              </button>
+              <div key={chat.id} className="relative group">
+                <button
+                  onClick={() => handleSelectChat(chat.id)}
+                  className={`w-full text-left p-3 rounded-lg transition ${
+                    activeConversation === chat.id
+                      ? "bg-zinc-800 border border-zinc-600"
+                      : "bg-zinc-900 hover:bg-zinc-800"
+                  }`}
+                >
+                  {chat.title}
+                </button>
+
+                <button
+                  onClick={() => handleDeleteChat(chat.id)}
+                  className="
+      absolute top-2 right-2
+      opacity-0 group-hover:opacity-100
+      transition text-red-400
+      hover:text-red-300
+    "
+                >
+                  ✕
+                </button>
+              </div>
             ))
           )}
         </div>
