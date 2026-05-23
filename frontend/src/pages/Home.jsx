@@ -13,10 +13,10 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
-
+  const [typingMessage, setTypingMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState("");
-
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef(null);
@@ -104,6 +104,18 @@ export default function Home() {
     }
   };
 
+  const typeMessage = async (text) => {
+    setTypingMessage("");
+
+    for (let i = 0; i < text.length; i++) {
+      setTypingMessage((prev) => prev + text[i]);
+
+      await new Promise((resolve) => setTimeout(resolve, 8));
+    }
+
+    return text;
+  };
+
   const handleSend = async () => {
     if (!query.trim()) return;
 
@@ -134,13 +146,18 @@ export default function Home() {
     try {
       const data = await sendMessage(currentQuery, conversationId);
 
+      await typeMessage(data.answer);
+
       const aiMessage = {
         role: "assistant",
         content: data.answer,
         sources: data.sources,
+        timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      setTypingMessage("");
 
       await fetchConversations();
     } catch (error) {
@@ -181,47 +198,61 @@ export default function Home() {
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
       {/* SIDEBAR */}
-      <aside className="w-64 border-r border-zinc-800 bg-zinc-950 flex flex-col">
+      <aside
+        className={`border-r border-zinc-800 bg-zinc-950 flex flex-col transition-all duration-300 ${
+          sidebarOpen ? "w-64" : "w-16"
+        }`}
+      >
+        <div className="p-3 border-b border-zinc-800 flex justify-center">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 text-zinc-400 hover:text-white transition"
+          >
+            ☰
+          </button>
+        </div>
         <div className="p-4 border-b border-zinc-800">
           <button
             onClick={handleNewChat}
-            className="w-full bg-white text-black py-2 rounded-lg font-semibold hover:bg-zinc-300 transition"
+            className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 w-full bg-white text-black py-2 rounded-lg font-semibold hover:bg-zinc-300 transition"
           >
-            + New Chat
+            {sidebarOpen ? "+ New Chat" : "+"}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          {conversations.length === 0 ? (
-            <p className="text-zinc-500 text-sm p-2">No chats yet</p>
-          ) : (
-            conversations.map((chat) => (
-              <div key={chat.id} className="relative group">
-                <button
-                  onClick={() => handleSelectChat(chat.id)}
-                  className={`w-full text-left p-3 rounded-lg transition ${
-                    activeConversation === chat.id
-                      ? "bg-zinc-800 border border-zinc-600"
-                      : "bg-zinc-900 hover:bg-zinc-800"
-                  }`}
-                >
-                  {chat.title}
-                </button>
+          {conversations.length === 0
+            ? sidebarOpen && (
+                <p className="text-zinc-500 text-sm p-2">No chats yet</p>
+              )
+            : conversations.map((chat) => (
+                <div key={chat.id} className="relative group">
+                  <button
+                    onClick={() => handleSelectChat(chat.id)}
+                    className={`cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 w-full p-3 rounded-lg transition ${
+                      sidebarOpen ? "text-left" : "flex justify-center"
+                    } ${
+                      activeConversation === chat.id
+                        ? "bg-zinc-800 border border-zinc-600"
+                        : "bg-zinc-900 hover:bg-zinc-800"
+                    }`}
+                  >
+                    {sidebarOpen ? chat.title : ""}
+                  </button>
 
-                <button
-                  onClick={() => handleDeleteChat(chat.id)}
-                  className="
+                  <button
+                    onClick={() => handleDeleteChat(chat.id)}
+                    className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150
       absolute top-2 right-2
       opacity-0 group-hover:opacity-100
       transition text-red-400
       hover:text-red-300
     "
-                >
-                  ✕
-                </button>
-              </div>
-            ))
-          )}
+                  >
+                    {sidebarOpen ? "✕" : "🗑"}
+                  </button>
+                </div>
+              ))}
         </div>
       </aside>
 
@@ -229,7 +260,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* HEADER */}
         <header className="border-b border-zinc-800 p-4">
-          <h1 className="text-2xl font-bold">Mi9A3 🗿</h1>
+          <h1 className="text-2xl font-bold">AccuSearch </h1>
         </header>
 
         {/* CHAT AREA */}
@@ -250,6 +281,8 @@ export default function Home() {
                     ? new Date(msg.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
+                        hour12: true,
+                        timeZone: "Asia/Kolkata",
                       })
                     : ""}
                 </p>
@@ -271,9 +304,21 @@ export default function Home() {
               </div>
             ))}
 
+            {typingMessage && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 max-w-xl">
+                <p>{typingMessage}</p>
+              </div>
+            )}
+
             {loading && (
-              <div className="bg-zinc-900 border border-zinc-700 max-w-xl p-4 rounded-xl animate-pulse">
-                Thinking...
+              <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 max-w-xl transition-all duration-300 animate-pulse">
+                <div className="space-y-3">
+                  <div className="h-3 bg-zinc-700 rounded w-3/4"></div>
+
+                  <div className="h-3 bg-zinc-700 rounded w-full"></div>
+
+                  <div className="h-3 bg-zinc-700 rounded w-5/6"></div>
+                </div>
               </div>
             )}
           </div>
@@ -298,21 +343,21 @@ export default function Home() {
 
             <label
               htmlFor="pdfUpload"
-              className="cursor-pointer bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg border border-zinc-600 transition"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg border border-zinc-600 transition"
             >
               Choose PDFs
             </label>
 
             <label
               htmlFor="pdfUpload"
-              className="cursor-pointer bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold transition"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold transition"
             >
               +
             </label>
 
             <button
               onClick={handleUpload}
-              className="bg-red-600 px-4 py-2 rounded-lg border border-white hover:bg-red-500 transition"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-red-600 px-4 py-2 rounded-lg border border-white hover:bg-red-500 transition"
             >
               Upload
             </button>
@@ -354,7 +399,7 @@ export default function Home() {
             <button
               onClick={handleSend}
               disabled={loading}
-              className="bg-white text-black px-6 rounded-lg font-semibold hover:bg-zinc-300 transition disabled:opacity-50"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-white text-black px-6 rounded-lg font-semibold hover:bg-zinc-300 transition disabled:opacity-50"
             >
               Send
             </button>
