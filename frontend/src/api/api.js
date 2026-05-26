@@ -46,3 +46,19 @@ export const deleteConversation = async (conversationId) => {
 
   return response.data;
 };
+
+export const renameConversation = async (conversationId, title) => {
+  const response = await API.put(
+    `/conversations/${conversationId}?title=${encodeURIComponent(title)}`,
+  );
+
+  return response.data;
+};
+
+export const generateQuiz = async (conversationId) => {
+  const response = await API.post(
+    `/generate-quiz?conversation_id=${conversationId}`
+  );
+
+  return response.data;
+};

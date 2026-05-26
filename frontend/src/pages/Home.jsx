@@ -6,7 +6,10 @@ import {
   getConversations,
   getMessages,
   deleteConversation,
+  renameConversation,
+  generateQuiz,
 } from "../api/api";
+import QuizPanel from "../components/QuizPanel";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -18,7 +21,11 @@ export default function Home() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
-
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [quiz, setQuiz] = useState([]);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizLoading, setQuizLoading] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -195,6 +202,23 @@ export default function Home() {
     }
   };
 
+  const handleGenerateQuiz = async () => {
+    if (!activeConversation) return;
+
+    try {
+      setQuizLoading(true);
+
+      const data = await generateQuiz(activeConversation);
+
+      setQuiz(data);
+      setShowQuiz(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-black text-white flex overflow-hidden">
       {/* SIDEBAR */}
@@ -237,7 +261,85 @@ export default function Home() {
                         : "bg-zinc-900 hover:bg-zinc-800"
                     }`}
                   >
-                    {sidebarOpen ? chat.title : ""}
+                    {sidebarOpen &&
+                      (editingChatId === chat.id ? (
+                        <input
+                          autoFocus
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={async () => {
+                            if (!editingTitle.trim()) {
+                              setEditingChatId(null);
+                              return;
+                            }
+
+                            await renameConversation(chat.id, editingTitle);
+
+                            setConversations((prev) =>
+                              prev.map((c) =>
+                                c.id === chat.id
+                                  ? {
+                                      ...c,
+                                      title: editingTitle,
+                                    }
+                                  : c,
+                              ),
+                            );
+
+                            setEditingChatId(null);
+                          }}
+                          onKeyDown={async (e) => {
+                            if (e.key === "Enter") {
+                              await renameConversation(chat.id, editingTitle);
+
+                              setConversations((prev) =>
+                                prev.map((c) =>
+                                  c.id === chat.id
+                                    ? {
+                                        ...c,
+                                        title: editingTitle,
+                                      }
+                                    : c,
+                                ),
+                              );
+
+                              setEditingChatId(null);
+                            }
+
+                            if (e.key === "Escape") {
+                              setEditingChatId(null);
+                            }
+                          }}
+                          className="
+        bg-zinc-800
+        text-white
+        rounded-md
+        px-2
+        py-1
+        outline-none
+        border border-zinc-600
+        w-full
+      "
+                        />
+                      ) : (
+                        chat.title
+                      ))}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setEditingChatId(chat.id);
+                      setEditingTitle(chat.title);
+                    }}
+                    className="
+    absolute top-2 right-8
+    opacity-0 group-hover:opacity-100
+    transition text-blue-400
+    hover:text-blue-300
+    cursor-pointer
+  "
+                  >
+                    ✏️
                   </button>
 
                   <button
@@ -265,44 +367,71 @@ export default function Home() {
 
         {/* CHAT AREA */}
         <main ref={scrollRef} className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-3xl mx-auto space-y-4">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-xl max-w-xl ${
-                  msg.role === "user"
-                    ? "bg-zinc-800 ml-auto"
-                    : "bg-zinc-900 border border-zinc-700"
-                }`}
-              >
-                <p>{msg.content}</p>
-                <p className="text-xs text-zinc-500 mt-2 text-right">
-                  {msg.timestamp
-                    ? new Date(msg.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                        timeZone: "Asia/Kolkata",
-                      })
-                    : ""}
+          <div className="max-w-3xl mx-auto space-y-4 h-full">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <h1 className="text-4xl font-bold text-white mb-3">
+                  Ready to search smarter? 🔍
+                </h1>
+
+                <p className="text-zinc-500 text-lg mb-8 max-w-md">
+                  Upload PDFs and ask questions from your study materials
+                  instantly.
                 </p>
 
-                {msg.sources && (
-                  <div className="mt-3 text-sm text-zinc-400">
-                    <p className="font-semibold mb-1">Sources:</p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <button className="cursor-pointer bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-xl px-5 py-3 transition">
+                    📄 Upload PDFs
+                  </button>
 
-                    {msg.sources.map((source, idx) => {
-                      const cleanedSource = source
-                        .replace("uploads/", "")
-                        .replace("temp.pdf", "Uploaded PDF")
-                        .replace(/\(Page/g, " — Page");
+                  <button className="cursor-pointer bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-xl px-5 py-3 transition">
+                    🧠 Explain Concepts
+                  </button>
 
-                      return <p key={idx}>• {cleanedSource}</p>;
-                    })}
-                  </div>
-                )}
+                  <button className="cursor-pointer bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-xl px-5 py-3 transition">
+                    🔍 Ask Questions
+                  </button>
+                </div>
               </div>
-            ))}
+            ) : (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-xl max-w-xl ${
+                    msg.role === "user"
+                      ? "bg-zinc-800 ml-auto"
+                      : "bg-zinc-900 border border-zinc-700"
+                  }`}
+                >
+                  <p>{msg.content}</p>
+                  <p className="text-xs text-zinc-500 mt-2 text-right">
+                    {msg.timestamp
+                      ? new Date(msg.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                          timeZone: "Asia/Kolkata",
+                        })
+                      : ""}
+                  </p>
+
+                  {msg.sources && (
+                    <div className="mt-3 text-sm text-zinc-400">
+                      <p className="font-semibold mb-1">Sources:</p>
+
+                      {msg.sources.map((source, idx) => {
+                        const cleanedSource = source
+                          .replace("uploads/", "")
+                          .replace("temp.pdf", "Uploaded PDF")
+                          .replace(/\(Page/g, " — Page");
+
+                        return <p key={idx}>• {cleanedSource}</p>;
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
 
             {typingMessage && (
               <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 max-w-xl">
@@ -321,6 +450,12 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            <QuizPanel
+              showQuiz={showQuiz}
+              quiz={quiz}
+              quizLoading={quizLoading}
+            />
           </div>
         </main>
 
@@ -350,16 +485,23 @@ export default function Home() {
 
             <label
               htmlFor="pdfUpload"
-              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold transition"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-zinc-600 hover:bg-zinc-500 px-4 py-2 rounded-lg font-bold transition"
             >
               +
             </label>
 
             <button
               onClick={handleUpload}
-              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-red-600 px-4 py-2 rounded-lg border border-white hover:bg-red-500 transition"
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg border border-zinc-600 transition"
             >
               Upload
+            </button>
+
+            <button
+              onClick={handleGenerateQuiz}
+              className="cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-150 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg border border-zinc-600 transition"
+            >
+              Generate Quiz
             </button>
           </div>
 
