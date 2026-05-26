@@ -11,6 +11,7 @@ from rag1.utils import (
     add_documents_to_db,
     get_vectorstore,
     get_response,
+    get_quiz_response,
 )
 
 app = FastAPI()
@@ -123,6 +124,35 @@ def chat(query: str, conversation_id: int, db: Session = Depends(get_db)):
     return {"answer": answer, "sources": sources}
 
 
+@app.post("/generate-quiz")
+def generate_quiz(conversation_id: int, db: Session = Depends(get_db)):
+
+    vectorstore = get_vectorstore()
+
+    retriever = vectorstore.as_retriever(
+        search_kwargs={
+            "k": 12,
+            "filter": {"conversation_id": conversation_id},
+        }
+    )
+
+    relevant_docs = retriever.invoke(
+        """
+        Important concepts, definitions,
+        comparisons, examples,
+        advantages, disadvantages,
+        key exam topics
+        """
+    )
+
+    context_docs = [ doc.page_content for doc in relevant_docs ]
+    print("TOTAL RETRIEVED DOCS:", len(context_docs))
+
+    quiz = get_quiz_response(context_docs)
+
+    return quiz
+
+
 @app.delete("/conversations/{conversation_id}")
 def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
     conversation = (
@@ -139,3 +169,21 @@ def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Conversation deleted successfully"}
+
+
+@app.put("/conversations/{conversation_id}")
+def rename_conversation(
+    conversation_id: int, title: str, db: Session = Depends(get_db)
+):
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
+
+    if not conversation:
+        return {"error": "Conversation not found"}
+
+    conversation.title = title
+
+    db.commit()
+
+    return {"id": conversation.id, "title": conversation.title}
