@@ -1,0 +1,238 @@
+[
+  {
+    "pdf": "Process_OS",
+    "question": "What is a process?",
+    "acceptable_keywords": [
+      "process",
+      "program in execution",
+      "process control block",
+      "program counter",
+      "registers",
+      "stack",
+      "heap",
+      "address space"
+    ]
+  },
+  {
+    "pdf": "Process_OS",
+    "question": "What is a Context Switch?",
+    "acceptable_keywords": [
+      "context switch",
+      "PCB",
+      "CPU registers",
+      "kernel stack",
+      "process state",
+      "scheduler dispatch",
+      "overhead"
+    ]
+  },
+  {
+    "pdf": "Process_OS",
+    "question": "What is synchronization?",
+    "acceptable_keywords": [
+      "synchronization",
+      "critical section",
+      "shared memory",
+      "message passing",
+      "blocking",
+      "non-blocking",
+      "semaphores"
+    ]
+  },
+  {
+    "pdf": "Process_OS",
+    "question": "What are parent and child processes?",
+    "acceptable_keywords": [
+      "parent process",
+      "child process",
+      "fork system call",
+      "init process",
+      "process hierarchy",
+      "orphan process",
+      "zombie process"
+    ]
+  },
+  {
+    "pdf": "Process_OS",
+    "question": "What is a thread?",
+    "acceptable_keywords": [
+      "thread",
+      "multiple program counters",
+      "lightweight process",
+      "concurrency",
+      "task struct",
+      "multithreading"
+    ]
+  },
+  {
+    "pdf": "IPC",
+    "question": "What are the two main models of interprocess communication?",
+    "acceptable_keywords": [
+      "IPC",
+      "shared memory",
+      "message passing",
+      "process isolation",
+      "data exchange"
+    ]
+  },
+  {
+    "pdf": "IPC",
+    "question": "How does the producer-consumer problem illustrate IPC concepts?",
+    "acceptable_keywords": [
+      "producer-consumer problem",
+      "bounded buffer",
+      "unbounded buffer",
+      "synchronization",
+      "shared memory"
+    ]
+  },
+  {
+    "pdf": "IPC",
+    "question": "What is a race condition and how does it occur in IPC?",
+    "acceptable_keywords": [
+      "race condition",
+      "counter increment/decrement",
+      "execution interleaving",
+      "shared memory",
+      "synchronization issue"
+    ]
+  },
+  {
+    "pdf": "IPC",
+    "question": "What are the differences between direct and indirect communication links?",
+    "acceptable_keywords": [
+      "direct communication",
+      "indirect communication",
+      "mailbox",
+      "ports",
+      "send/receive primitives"
+    ]
+  },
+  {
+    "pdf": "IPC",
+    "question": "How do message queues enable asynchronous communication between processes?",
+    "acceptable_keywords": [
+      "message queue",
+      "FIFO",
+      "msgget",
+      "msgsnd",
+      "msgrcv",
+      "asynchronous communication",
+      "priority support"
+    ]
+  },
+  {
+    "pdf": "Functional Dependency and Normalization",
+    "question": "What are insertion, deletion, and modification anomalies in database design?",
+    "acceptable_keywords": [
+      "update anomalies",
+      "insertion anomaly",
+      "deletion anomaly",
+      "modification anomaly",
+      "redundancy"
+    ]
+  },
+  {
+    "pdf": "Functional Dependency and Normalization",
+    "question": "How does lossy decomposition differ from lossless decomposition?",
+    "acceptable_keywords": [
+      "lossy decomposition",
+      "lossless decomposition",
+      "spurious tuples",
+      "natural join",
+      "schema decomposition"
+    ]
+  },
+  {
+    "pdf": "Functional Dependency and Normalization",
+    "question": "What are Armstrong’s axioms and why are they important in functional dependency inference?",
+    "acceptable_keywords": [
+      "Armstrong's axioms",
+      "reflexivity",
+      "augmentation",
+      "transitivity",
+      "union",
+      "decomposition",
+      "pseudo transitivity"
+    ]
+  },
+  {
+    "pdf": "Functional Dependency and Normalization",
+    "question": "How is attribute closure used to determine candidate keys in a relation?",
+    "acceptable_keywords": [
+      "attribute closure",
+      "candidate key",
+      "super key",
+      "functional dependency",
+      "closure computation"
+    ]
+  },
+  {
+    "pdf": "Functional Dependency and Normalization",
+    "question": "What conditions must be satisfied for a relation to be in Boyce-Codd Normal Form (BCNF)?",
+    "acceptable_keywords": [
+      "BCNF",
+      "Boyce-Codd Normal Form",
+      "functional dependency",
+      "candidate key",
+      "normalization"
+    ]
+  },
+  {
+    "pdf": "Relational Algebra",
+    "question": "Why is relational algebra considered the theoretical foundation of SQL?",
+    "acceptable_keywords": [
+      "relational algebra",
+      "SQL foundation",
+      "query language",
+      "set theory",
+      "relational model"
+    ]
+  },
+  {
+    "pdf": "Relational Algebra",
+    "question": "What are the six basic operators in relational algebra?",
+    "acceptable_keywords": [
+      "union",
+      "intersection",
+      "difference",
+      "select",
+      "project",
+      "join"
+    ]
+  },
+  {
+    "pdf": "Relational Algebra",
+    "question": "How does the select operation work and what is its notation?",
+    "acceptable_keywords": [
+      "select operation",
+      "σ (sigma)",
+      "predicate",
+      "tuple selection",
+      "relational algebra"
+    ]
+  },
+  {
+    "pdf": "Relational Algebra",
+    "question": "What is the difference between natural join and outer join?",
+    "acceptable_keywords": [
+      "natural join",
+      "outer join",
+      "inner join",
+      "join condition",
+      "relational algebra"
+    ]
+  },
+  {
+    "pdf": "Relational Algebra",
+    "question": "How are aggregate functions like SUM, AVG, and COUNT expressed in relational algebra?",
+    "acceptable_keywords": [
+      "aggregate functions",
+      "SUM",
+      "AVG",
+      "COUNT",
+      "grouping",
+      "extended relational algebra"
+    ]
+  }
+]
