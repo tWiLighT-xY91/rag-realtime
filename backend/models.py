@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from database import Base
 from datetime import datetime
-
+from sqlalchemy import JSON
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -12,6 +12,7 @@ class Conversation(Base):
     title = Column(String, nullable=False)
 
     messages = relationship("Message", back_populates="conversation")
+    quiz_data = Column(JSON, nullable=True)
 
 
 class Message(Base):

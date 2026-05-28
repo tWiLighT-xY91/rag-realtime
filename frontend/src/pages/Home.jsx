@@ -38,6 +38,12 @@ export default function Home() {
     fetchConversations();
   }, []);
 
+  useEffect(() => {
+    setQuiz(null);
+    setShowQuiz(false);
+    setQuizLoading(false);
+  }, [activeConversation]);
+
   const handleUpload = async () => {
     if (!selectedFiles.length) return;
 
@@ -104,8 +110,11 @@ export default function Home() {
       setUploadStatus("");
 
       const data = await getMessages(conversationId);
+      console.log(data);
 
-      setMessages(data);
+      setMessages(data.messages);
+      setQuiz(data.quiz_data || null);
+      setShowQuiz(!!data.quiz_data);
     } catch (error) {
       console.error(error);
     }
@@ -207,13 +216,13 @@ export default function Home() {
 
     try {
       setQuizLoading(true);
+      setShowQuiz(true);
 
       const data = await generateQuiz(activeConversation);
 
       setQuiz(data);
-      setShowQuiz(true);
     } catch (error) {
-      console.error(error);
+      console.error("Quiz generation failed:", error);
     } finally {
       setQuizLoading(false);
     }

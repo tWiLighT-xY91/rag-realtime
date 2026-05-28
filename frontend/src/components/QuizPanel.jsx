@@ -1,29 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function QuizPanel({
-  showQuiz,
-  quiz,
-  quizLoading,
-}) {
+export default function QuizPanel({ showQuiz, quiz, quizLoading }) {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    setSelectedAnswers({});
+    setShowResults(false);
+  }, [quiz]);
 
   if (!showQuiz) return null;
 
   const score =
     quiz?.questions?.reduce((acc, q, index) => {
-      return selectedAnswers[index] === q.correct_answer
-        ? acc + 1
-        : acc;
+      return selectedAnswers[index] === q.correct_answer ? acc + 1 : acc;
     }, 0) || 0;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-5 overflow-y-auto text-white">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-purple-400">
-          Quiz Time 🧠
-        </h2>
+        <h2 className="text-2xl font-bold text-purple-400">Quiz Time 🧠</h2>
 
         <div className="flex items-center gap-4">
           <span className="text-sm text-zinc-400">
@@ -40,19 +37,38 @@ export default function QuizPanel({
 
       {/* Loading */}
       {quizLoading ? (
-        <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 animate-pulse">
-          <p className="text-zinc-400 mb-4">
-            Generating quiz from your PDF...
-          </p>
+        <div className="space-y-5">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-purple-400">
+              Generating Quiz 🧠
+            </h2>
 
-          <div className="h-5 bg-zinc-700 rounded w-2/3 mb-4"></div>
-
-          <div className="space-y-3">
-            <div className="h-10 bg-zinc-800 rounded-lg"></div>
-            <div className="h-10 bg-zinc-800 rounded-lg"></div>
-            <div className="h-10 bg-zinc-800 rounded-lg"></div>
-            <div className="h-10 bg-zinc-800 rounded-lg"></div>
+            <p className="text-zinc-400 mt-2 animate-pulse">
+              Creating questions from your PDF...
+            </p>
           </div>
+
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="
+          bg-zinc-900
+          border border-zinc-700
+          rounded-2xl
+          p-5
+          animate-pulse
+        "
+            >
+              <div className="h-6 bg-zinc-700 rounded w-3/4 mb-4"></div>
+
+              <div className="space-y-3">
+                <div className="h-10 bg-zinc-800 rounded-xl"></div>
+                <div className="h-10 bg-zinc-800 rounded-xl"></div>
+                <div className="h-10 bg-zinc-800 rounded-xl"></div>
+                <div className="h-10 bg-zinc-800 rounded-xl"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : quiz?.questions?.length > 0 ? (
         <>
@@ -89,11 +105,11 @@ export default function QuizPanel({
                             ? idx === q.correct_answer
                               ? "bg-green-700 border-green-500"
                               : selectedAnswers[index] === idx
-                              ? "bg-red-700 border-red-500"
-                              : "bg-zinc-800 border-zinc-700"
+                                ? "bg-red-700 border-red-500"
+                                : "bg-zinc-800 border-zinc-700"
                             : selectedAnswers[index] === idx
-                            ? "bg-purple-700 border-purple-500"
-                            : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700"
+                              ? "bg-purple-700 border-purple-500"
+                              : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700"
                         }
                       `}
                     >
