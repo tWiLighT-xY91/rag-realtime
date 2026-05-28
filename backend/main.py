@@ -146,7 +146,7 @@ def generate_quiz(conversation_id: int, db: Session = Depends(get_db)):
     )
 
     context_docs = [ doc.page_content for doc in relevant_docs ]
-    print("TOTAL RETRIEVED DOCS:", len(context_docs))
+    
 
     quiz = get_quiz_response(context_docs)
 
