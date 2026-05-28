@@ -1,0 +1,7 @@
+sqlalchemy
+fastapi
+uvicorn
+langchain
+langchain_community
+lanchain_text_splitters
+langchain_huggingface
