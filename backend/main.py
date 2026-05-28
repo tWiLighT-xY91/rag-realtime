@@ -1,3 +1,5 @@
+from pyexpat.errors import messages
+
 from database import engine
 from models import Base
 from sqlalchemy.orm import Session
@@ -81,7 +83,11 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
         db.query(Message).filter(Message.conversation_id == conversation_id).all()
     )
 
-    return messages
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
+
+    return {"messages": messages, "quiz_data": conversation.quiz_data}
 
 
 @app.post("/chat")
@@ -136,19 +142,23 @@ def generate_quiz(conversation_id: int, db: Session = Depends(get_db)):
         }
     )
 
-    relevant_docs = retriever.invoke(
-        """
+    relevant_docs = retriever.invoke("""
         Important concepts, definitions,
         comparisons, examples,
         advantages, disadvantages,
         key exam topics
-        """
-    )
+        """)
 
-    context_docs = [ doc.page_content for doc in relevant_docs ]
-    
+    context_docs = [doc.page_content for doc in relevant_docs]
 
     quiz = get_quiz_response(context_docs)
+    conversation = (
+        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    )
+
+    conversation.quiz_data = quiz
+
+    db.commit()
 
     return quiz
 
