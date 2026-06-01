@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: "/api",
 });
 
 export const uploadPDF = async (file, conversationId) => {
@@ -57,7 +57,7 @@ export const renameConversation = async (conversationId, title) => {
 
 export const generateQuiz = async (conversationId) => {
   const response = await API.post(
-    `/generate-quiz?conversation_id=${conversationId}`
+    `/generate-quiz?conversation_id=${conversationId}`,
   );
 
   return response.data;

@@ -7,7 +7,7 @@ import os
 import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
 UPLOADS_PATH = os.path.join(BASE_DIR, "uploads")
 
@@ -48,7 +48,7 @@ def get_response(retriever, query, chat_history):
         if source_info not in sources:
             sources.append(source_info)
 
-    llm = ChatOllama(model="llama3")
+    llm = ChatOllama(model="llama3", base_url=OLLAMA_BASE_URL)
 
     context = "\n".join([doc.page_content for doc in docs])
 
@@ -85,7 +85,7 @@ def get_response(retriever, query, chat_history):
 
 def get_quiz_response(docs):
 
-    llm = ChatOllama(model="qwen2.5:7b", format="json")
+    llm = ChatOllama(model="qwen2.5:7b", format="json", base_url=OLLAMA_BASE_URL)
 
     context = "\n\n".join(docs)
 
