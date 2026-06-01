@@ -1,5 +1,5 @@
 from pyexpat.errors import messages
-
+import os
 from database import engine
 from models import Base
 from sqlalchemy.orm import Session
@@ -17,6 +17,7 @@ from rag1.utils import (
 )
 
 app = FastAPI()
+os.makedirs("uploads", exist_ok=True)
 Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,

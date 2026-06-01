@@ -1,7 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "postgresql://postgres:mi9a3@localhost/ragchat"
+import os
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:mi9a3@host.docker.internal:5432/ragchat"
+)
 
 engine = create_engine(DATABASE_URL)
 
