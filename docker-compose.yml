@@ -1,0 +1,57 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: accusearch-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mi9a3
+      POSTGRES_DB: ragchat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ragchat_backup.sql:/docker-entrypoint-initdb.d/ragchat_backup.sql
+    networks:
+      - accusearch-network
+
+  ollama:
+    image: ollama/ollama
+    container_name: accusearch-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - accusearch-network
+
+  backend:
+    build: ./backend
+    container_name: accusearch-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:mi9a3@db:5432/ragchat
+      OLLAMA_BASE_URL: http://ollama:11434
+    depends_on:
+      - db
+      - ollama
+    networks:
+      - accusearch-network
+
+  frontend:
+    build: ./frontend
+    container_name: accusearch-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - accusearch-network
+
+networks:
+  accusearch-network:
+
+volumes:
+  postgres_data:
+  ollama_data:
