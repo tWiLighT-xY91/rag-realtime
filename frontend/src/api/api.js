@@ -1,8 +1,11 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "/api",
+  baseURL:
+    import.meta.env.VITE_API_URL || "/api",
 });
+
+export default API;
 
 export const uploadPDF = async (file, conversationId) => {
   const formData = new FormData();
