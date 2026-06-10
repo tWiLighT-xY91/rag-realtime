@@ -3,6 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.chat_models import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 import json
 
@@ -48,7 +49,25 @@ def get_response(retriever, query, chat_history):
         if source_info not in sources:
             sources.append(source_info)
 
-    llm = ChatOllama(model="llama3", base_url=OLLAMA_BASE_URL)
+    USE_GEMINI = os.getenv("USE_GEMINI", "false").lower() == "true"
+
+    if USE_GEMINI:
+
+        llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.2
+    )
+
+    else:
+
+        llm = ChatOllama(
+        model="llama3.2:3b",
+        base_url=os.getenv(
+            "OLLAMA_BASE_URL",
+            "http://ollama:11434"
+        )
+    )
 
     context = "\n".join([doc.page_content for doc in docs])
 
@@ -85,7 +104,26 @@ def get_response(retriever, query, chat_history):
 
 def get_quiz_response(docs):
 
-    llm = ChatOllama(model="qwen2.5:7b", format="json", base_url=OLLAMA_BASE_URL)
+    USE_GEMINI = os.getenv("USE_GEMINI", "false").lower() == "true"
+
+    if USE_GEMINI:
+
+        llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.2
+    )
+
+    else:
+
+        llm = ChatOllama(
+        model="qwen2.5:3b",
+        format="json",
+        base_url=os.getenv(
+            "OLLAMA_BASE_URL",
+            "http://ollama:11434"
+        )
+    )
 
     context = "\n\n".join(docs)
 
