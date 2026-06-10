@@ -8,7 +8,7 @@ DATABASE_URL = os.getenv(
     "postgresql://postgres:mi9a3@host.docker.internal:5432/ragchat"
 )
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(
     autocommit=False,
