@@ -62,7 +62,7 @@ def get_response(retriever, query, chat_history):
     else:
 
         llm = ChatOllama(
-        model="llama3",
+        model="llama3.2:3b",
         base_url=os.getenv(
             "OLLAMA_BASE_URL",
             "http://ollama:11434"
@@ -117,7 +117,7 @@ def get_quiz_response(docs):
     else:
 
         llm = ChatOllama(
-        model="qwen2.5:7b",
+        model="qwen2.5:3b",
         format="json",
         base_url=os.getenv(
             "OLLAMA_BASE_URL",
